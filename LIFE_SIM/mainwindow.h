@@ -36,6 +36,8 @@ private slots:
 
     void on_loadDirectory_clicked();
 
+    void on_directoryBox_currentIndexChanged(int index);
+
 private:
     Ui::MainWindow *ui;
     _dataset_parser *parser = nullptr;
