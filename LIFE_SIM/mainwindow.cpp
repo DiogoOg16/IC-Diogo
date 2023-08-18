@@ -175,33 +175,52 @@ void MainWindow::on_loadSensors_clicked()
 }
 
 
+
+QString Dpath;
+
 void MainWindow::on_loadDirectory_clicked()
 {
 
-    QString path = QFileDialog::getExistingDirectory(this,
-                                             tr("Open Dataset directory"),
-                                             "..\\lifesenior-dataset",
-                                             QFileDialog::ShowDirsOnly);
-    if (parser == nullptr)
-    {
-        parser = new _dataset_parser(this, logger);
-        logger->write("Criando um data_parser");
-    }
+    // Get the path of the directory that the user selected.
+    QString directoryPath = QFileDialog::getExistingDirectory(this, "Select a Directory");
+    Dpath = directoryPath;
+    // Clear the list widget.
+    this->ui->directoryBox->clear();
+
+    // Create a list of the folders in the directory.
+    QDir directory(Dpath);
+    QStringList folders = directory.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
 
+    // Add the folders to the list widget.
+    this->ui->directoryBox->addItems(folders);
 
-    if (!path.isEmpty()) {
-        QDir directory(path);
-        QStringList subdirectories = directory.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+}
 
-        this->ui->directoryBox->clear(); // Clear the list widget before adding new items
 
-        for(int i = 0; i <subdirectories.size(); i++) {
-            this->ui->directoryBox->addItem(parser->get_personactivity_list()); // Add each subdirectory name to the list widget
+void MainWindow::on_directoryBox_currentIndexChanged(int index)
+{
+
+    // Get the selected folder name.
+    QString selectedFolderName =  this->ui->directoryBox->currentText();
+
+    // Create a list of the files in the selected folder.
+    QDir fileDir(Dpath + "/" + selectedFolderName);
+    QStringList files = fileDir.entryList(QDir::Files);
+
+    // Iterate over the files and remove the "_annotated" word.
+    for (int i = 0; i < files.size(); i++) {
+        QString fileName = files[i];
+        int index = fileName.indexOf("_annotated");
+        if (index != -1) {
+            files[i] = fileName.left(index);
         }
     }
 
+    // Add the files to the other QComboBox.
 
+    this->ui->patientBox->clear();
+    this->ui->patientBox->addItems(files);
 
 }
 
