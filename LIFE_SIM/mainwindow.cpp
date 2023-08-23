@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QHostAddress>
+#include <QPixmap> //modificado
 
 
 bool verificador = 0;
@@ -13,7 +14,11 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    //Imagem
+    QPixmap pix("C:/QT_pic/images.png");
+    //QPixmap pix;
+    //pix.load("C:/QT_pic/PUCRS.png");
+    ui->labelPNG->setPixmap(pix.scaled(200,100,Qt::KeepAspectRatio));
     //LOG File
     fileName = "logger.txt";
     logger = new Logger(this, fileName, this->ui->logplaintextedit);
@@ -195,6 +200,7 @@ void MainWindow::on_loadDirectory_clicked()
     // Add the folders to the list widget.
     this->ui->directoryBox->addItems(folders);
 
+
 }
 
 
@@ -221,6 +227,66 @@ void MainWindow::on_directoryBox_currentIndexChanged(int index)
 
     this->ui->patientBox->clear();
     this->ui->patientBox->addItems(files);
+
+
+    //adicionar a primeira linha e jogar numa QStringList
+    QString arquivoSelecionado =  this->ui->patientBox->currentText();
+    arquivoSelecionado += "_annotated.csv";
+
+    // Create a QFile object for the selected file.
+    QFile file(arquivoSelecionado);
+
+    // Open the file in read mode.
+    file.open(QIODevice::ReadOnly);
+
+    // Read the first line of the file.
+    QString linha = file.readLine();
+
+    // Close the file.
+    file.close();
+
+   //parser = new _dataset_parser(this, logger, QFileDialog::getOpenFileName(this,
+                                                                      //      tr("Open LABEL file"),
+                                                                       //     "..\\lifesenior-dataset",
+                                                                        //    tr("Dataset label file (*csv)")));
+    //this->ui->personActivity_Selector->addItems(parser->get_personactivity_list());
+    //this->ui->personActivity_Selector->addItems(parser->get_personactivity_list());
+    // parser = new _dataset_parser(this, logger);
+    //QString selectedFolderName =  this->ui->directoryBox->currentText();
+
+
+
+
+
+
+
+
+
+    //Identificar a atividade para mostrar na label
+
+    if(selectedFolderName == "BSC") ui->labelAtividadeDado->setText("Back sitting chair");
+    else if (selectedFolderName == "CHU") ui->labelAtividadeDado->setText("Chair Up");
+    else if (selectedFolderName == "CSI") ui->labelAtividadeDado->setText("Car Stepping-In");
+    else if (selectedFolderName == "CSO") ui->labelAtividadeDado->setText("Chair Stepping-Out");
+    else if (selectedFolderName == "FKL") ui->labelAtividadeDado->setText("Fall Front Knees Lying");
+    else if (selectedFolderName == "FOL") ui->labelAtividadeDado->setText("Fall Forward Lying");
+    else if (selectedFolderName == "JOG") ui->labelAtividadeDado->setText("Jogging");
+    else if (selectedFolderName == "JUM") ui->labelAtividadeDado->setText("Jumping");
+    else if (selectedFolderName == "SBE") ui->labelAtividadeDado->setText("Exercising");
+    else if (selectedFolderName == "SBW") ui->labelAtividadeDado->setText("Working");
+    else if (selectedFolderName == "SCH") ui->labelAtividadeDado->setText("Sit Chair");
+    else if (selectedFolderName == "SDL") ui->labelAtividadeDado->setText("Side Ward Lying");
+    else if (selectedFolderName == "SIT") ui->labelAtividadeDado->setText("Sitting On Chair");
+    else if (selectedFolderName == "SLH") ui->labelAtividadeDado->setText("Leaving Home");
+    else if (selectedFolderName == "SLW") ui->labelAtividadeDado->setText("Leaving Work");
+    else if (selectedFolderName == "SRH") ui->labelAtividadeDado->setText("Return Home");
+    else if (selectedFolderName == "STD") ui->labelAtividadeDado->setText("Standing");
+    else if (selectedFolderName == "STN") ui->labelAtividadeDado->setText("Stairs Down");
+    else if (selectedFolderName == "STU") ui->labelAtividadeDado->setText("Stairs Up");
+    else if (selectedFolderName == "WAL") ui->labelAtividadeDado->setText("Walking");
+    else ui->labelAtividadeDado->setText("Atividade não reconhecida");
+
+
 
 }
 
