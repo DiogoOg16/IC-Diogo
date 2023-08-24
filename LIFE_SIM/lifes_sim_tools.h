@@ -3,6 +3,7 @@
 
 #include "Socket_TCP.h"
 #include <QObject>
+#include "load_data.h"
 
 #define FIFO_out_size 1024
 #define FIFO_in_size  50
