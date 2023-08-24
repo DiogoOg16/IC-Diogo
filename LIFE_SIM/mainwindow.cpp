@@ -48,7 +48,7 @@ void MainWindow::on_connectbutton_clicked()
 void MainWindow::on_startbutton_clicked()
 {
 
-    if (!verificador){
+    /*if (!verificador){
          logger->write("No file was inserted");
     }else{
 
@@ -77,7 +77,7 @@ void MainWindow::on_startbutton_clicked()
     {
         logger->write("Any data parsed to send!");
     }
-    }
+    }*/
 }
 
 void MainWindow::on_stopbutton_clicked()
@@ -88,21 +88,21 @@ void MainWindow::on_stopbutton_clicked()
 
 void MainWindow::SendInFreq()
 {
-    static unsigned char result;
+  /*  static unsigned char result;
     static _life_sim_csv_dataset value;
     _ConfigPub config = Lifes_Protocol.Configuracoes_de_Publicacao();
 
     if (parser->get_item(parsed_index_sent, &value))
-    {
+    {*/
         /*  Update data to send */
-        result = Lifes_Protocol.Atualiza_Curvas(CMD_TYPE_SENSOR_DATA_ACC, value.data.acc, parsed_index_sent);
+      /*  result = Lifes_Protocol.Atualiza_Curvas(CMD_TYPE_SENSOR_DATA_ACC, value.data.acc, parsed_index_sent);
         result += Lifes_Protocol.Atualiza_Curvas(CMD_TYPE_SENSOR_DATA_BVP, &value.data.bvp, parsed_index_sent);
         result += Lifes_Protocol.Atualiza_Curvas(CMD_TYPE_SENSOR_DATA_EDA, &value.data.eda, parsed_index_sent);
         result += Lifes_Protocol.Atualiza_Curvas(CMD_TYPE_SENSOR_DATA_HR, &value.data.hr, parsed_index_sent);
         result += Lifes_Protocol.Atualiza_Curvas(CMD_TYPE_SENSOR_DATA_TEMP, &value.data.temp, parsed_index_sent);
-
+*/
         /*  Error */
-        if (result != 0)
+       /* if (result != 0)
             logger->write("Fail updating data structure");
     }
     else
@@ -112,9 +112,9 @@ void MainWindow::SendInFreq()
         timerTCP->stop();
         return;
     }
-
+*/
     /*  Enabled sensors to send */
-    if (config.bitarray_enabled_sensors & CONFIG_ENABLED_ACC)
+   /* if (config.bitarray_enabled_sensors & CONFIG_ENABLED_ACC)
     {
         Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_SENSOR_DATA_ACC);
         logger->write("sent acc data");
@@ -141,12 +141,12 @@ void MainWindow::SendInFreq()
     }
 
     // move pointer
-    parsed_index_sent += config.sampleRate;
+    parsed_index_sent += config.sampleRate;*/
 }
 
 void MainWindow::on_loadLabel_clicked()
 {
-    parser = new _dataset_parser(this, logger, QFileDialog::getOpenFileName(this,
+   /* parser = new _dataset_parser(this, logger, QFileDialog::getOpenFileName(this,
                                                                             tr("Open LABEL file"),
                                                                             "..\\lifesenior-dataset",
                                                                             tr("Dataset label file (*csv)")));
@@ -155,12 +155,12 @@ void MainWindow::on_loadLabel_clicked()
     this->ui->personActivity_Selector->addItems(parser->get_personactivity_list());
 
 
-    verificador = 1;
+    verificador = 1;*/
 }
 
 void MainWindow::on_loadSensors_clicked()
 {
-    QString path;
+   /* QString path;
 
 
     path = QFileDialog::getExistingDirectory(this,
@@ -176,7 +176,7 @@ void MainWindow::on_loadSensors_clicked()
     {
         logger->write("Loading data of " + this->ui->personActivity_Selector->currentText());
     }
-    parser->load_sensor_data(path + '/', this->ui->personActivity_Selector->currentIndex());
+    parser->load_sensor_data(path + '/', this->ui->personActivity_Selector->currentIndex());*/
 }
 
 
@@ -199,6 +199,7 @@ void MainWindow::on_loadDirectory_clicked()
 
     // Add the folders to the list widget.
     this->ui->directoryBox->addItems(folders);
+    verificador = 1;
 
 
 }
@@ -234,17 +235,21 @@ void MainWindow::on_directoryBox_currentIndexChanged(int index)
     arquivoSelecionado += "_annotated.csv";
 
     // Create a QFile object for the selected file.
-    QFile file(arquivoSelecionado);
+    //QFile file(arquivoSelecionado);
 
     // Open the file in read mode.
-    file.open(QIODevice::ReadOnly);
+    //file.open(QIODevice::ReadOnly);
 
     // Read the first line of the file.
-    QString linha = file.readLine();
+    //QString conteudo = file.readAll();
 
+    load =  new _load_data(this, logger, arquivoSelecionado);
+    //load->get_activity_list();
     // Close the file.
-    file.close();
+    //file.close();
 
+
+   //Exemplos
    //parser = new _dataset_parser(this, logger, QFileDialog::getOpenFileName(this,
                                                                       //      tr("Open LABEL file"),
                                                                        //     "..\\lifesenior-dataset",
