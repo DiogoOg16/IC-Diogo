@@ -9,6 +9,7 @@
 #include "protocol.h"
 #include "Socket_TCP.h"
 
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -41,6 +42,7 @@ private slots:
 private:
     Ui::MainWindow *ui;
     _dataset_parser *parser = nullptr;
+    _load_data *load = nullptr;
     double last_timestamp;
     unsigned int parsed_index_sent;
 };
