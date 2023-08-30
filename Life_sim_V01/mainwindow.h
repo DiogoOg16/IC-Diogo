@@ -22,12 +22,19 @@ public:
     Logger *logger;
     _load_data *load = nullptr;
 
+    //void addPoint(float x, float y);
+    //void clearData();
+    //void plot();
+
 private slots:
     void on_loadDirectory_clicked();
 
     void on_directoryBox_currentIndexChanged(int index);
 
+    void on_patientBox_currentIndexChanged(int index);
+
 private:
     Ui::MainWindow *ui;
+   // QVector<float> qv_x, qv_y;
 };
 #endif // MAINWINDOW_H
