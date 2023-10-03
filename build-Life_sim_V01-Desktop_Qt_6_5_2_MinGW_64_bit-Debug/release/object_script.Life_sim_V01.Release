@@ -1,0 +1,11 @@
+release/mainwindow.o
+release/axistag.o
+release/main.o
+release/load_data.o
+release/logger.o
+release/qcustomplot.o
+release/moc_mainwindow.o
+release/moc_axistag.o
+release/moc_load_data.o
+release/moc_logger.o
+release/moc_qcustomplot.o
