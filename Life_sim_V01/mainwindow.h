@@ -27,7 +27,7 @@ public:
 
     QString fileName;
     Logger *logger;
-    _load_data *load = nullptr;
+    
 
 
 
@@ -44,7 +44,23 @@ private slots:
 
     double obtemElements(int index);
 
-    void criaGrafico();
+    void criaGraficoAccX();
+
+    void criaGraficoAccY();
+
+    void criaGraficoAccZ();
+
+    void criaGraficoGyrX();
+
+    void criaGraficoGyrY();
+
+    void criaGraficoGyrZ();
+
+    void criaGraficoAzimuth();
+
+    void criaGraficoPitch();
+
+    void criaGraficoRoll();
 
     void on_stopbutton_clicked();
 
@@ -63,6 +79,7 @@ private:
     AxisTag *mTag1;
     AxisTag *mTag2;
     QTimer mDataTimer;
+    load_data *load;
 
 };
 #endif // MAINWINDOW_H
