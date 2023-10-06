@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent)
     logger = new Logger(this, fileName, this->ui->plainTextEdit);
     logger->write("Hello Qt");
 
-QVBoxLayout *layout = new QVBoxLayout;
+//QVBoxLayout *layout = new QVBoxLayout;
 }
 
 MainWindow::~MainWindow()
@@ -122,21 +122,23 @@ void MainWindow::on_patientBox_currentIndexChanged(int index)
 {
     //adicionar a primeira linha e jogar numa QStringList
     QString arquivoSelecionado =  this->ui->patientBox->currentText();
-
     QDir d(caminho + "/" + arquivoSelecionado);
     QString bloco = d.path();
     temp = bloco;
     this->logger->write(temp);
     temp = temp.replace("/", "\\");
+    bloco = bloco.replace("/", "\\");
+    load = new load_data(logger,bloco);
+    load->defineFileDyr(bloco);
 }
 
 
-int tamArq = 0;
+
 QVector<double> dados;
 void MainWindow::on_SET_clicked()
 {
     /* Open file */
-    QFile file(temp);
+  /*  QFile file(temp);
     if (!file.open(QIODevice::ReadOnly)) {
     std::cerr << "Failed to open file" << std::endl;
     }
@@ -151,16 +153,23 @@ void MainWindow::on_SET_clicked()
         dados.push_back(valor);
     }
       file.close();
-
+*/
+    load->data_parser();
     this->logger->write("SETADO");
+    //std::cout<<"PUTS" << std::endl;
+    //load->printParser();
     //this->logger->write("SETADO");
-    for (int i = 0; i < dados.size(); i++){
+
+    /*for (int i = 0; i < dados.size(); i++){
         std::cout << dados[i] << std::endl;
-    }
+    }*/
 
     //std::reverse(dados.begin(), dados.end());
 
+  //QVector<double> vec =  load->obtemAcc_x();
+
 }
+
 
 
 
@@ -172,15 +181,15 @@ void MainWindow::on_startbutton_clicked()
     criaGraficoAccX();
 
     // configure plot to have two right axes:
-    /*ui->acc_widget->yAxis->setTickLabels(false);
-    connect(ui->acc_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    ui->acc_widget->yAxis2->setVisible(true);
-    ui->acc_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->acc_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->acc_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    /*ui->acc_x_widget->yAxis->setTickLabels(false);
+    connect(ui->acc_x_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_x_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
+    ui->acc_x_widget->yAxis2->setVisible(true);
+    ui->acc_x_widget->axisRect()->addAxis(QCPAxis::atRight);
+    ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
+    ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
-    mGraph1 = ui->acc_widget->addGraph(ui->acc_widget->xAxis, ui->acc_widget->axisRect()->axis(QCPAxis::atRight, 0));
+    mGraph1 = ui->acc_x_widget->addGraph(ui->acc_x_widget->xAxis, ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0));
     //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph1->setPen(QPen(QColor(250, 120, 0)));
     //mGraph2->setPen(QPen(QColor(0, 180, 60)));
@@ -202,17 +211,21 @@ void MainWindow::on_startbutton_clicked()
 
 void MainWindow::timerSlot()
 {
-    double ponto = dados[0];
-    if(!dados.isEmpty())dados.pop_front();
+    //QVector<double> vec =  load->obtemAcc_x();
+    //QVector<double> t = load->obtemAcc_x;
+    double ponto = load->elem1Acc_x();
+    if(load->obtemAcc_x().size() != 1){
+        load->acc_x_Pop();
+    }
     // calculate and add a new data point to each graph:
     mGraph1->addData(mGraph1->dataCount(), ponto);
     //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
-    ui->acc_widget->xAxis->rescale();
+    ui->acc_x_widget->xAxis->rescale();
     mGraph1->rescaleValueAxis(false, true);
     //mGraph2->rescaleValueAxis(false, true);
-    ui->acc_widget->xAxis->setRange(ui->acc_widget->xAxis->range().upper, 100, Qt::AlignRight);
+    ui->acc_x_widget->xAxis->setRange(ui->acc_x_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph1Value = mGraph1->dataMainValue(mGraph1->dataCount()-1);
@@ -222,10 +235,7 @@ void MainWindow::timerSlot()
     mTag1->setText(QString::number(graph1Value, 'f', 2));
     //mTag2->setText(QString::number(graph2Value, 'f', 2));
 
-    ui->acc_widget->replot();
-
-
-
+    ui->acc_x_widget->replot();
 
 }
 
@@ -245,17 +255,17 @@ void MainWindow::on_stopbutton_clicked()
 
 void MainWindow::criaGraficoAccX(){
     // configure plot to have two right axes:
-    ui->acc_widget->yAxis->setTickLabels(false);
-    connect(ui->acc_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    ui->acc_widget->yAxis2->setVisible(true);
-    ui->acc_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->acc_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->acc_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->acc_x_widget->yAxis->setTickLabels(false);
+    connect(ui->acc_x_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_x_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
+    ui->acc_x_widget->yAxis2->setVisible(true);
+    ui->acc_x_widget->axisRect()->addAxis(QCPAxis::atRight);
+    ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
+    ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
-    mGraph1 = ui->acc_widget->addGraph(ui->acc_widget->xAxis, ui->acc_widget->axisRect()->axis(QCPAxis::atRight, 0));
+    mGraph1 = ui->acc_x_widget->addGraph(ui->acc_x_widget->xAxis, ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0));
     //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
-    mGraph1->setPen(QPen(QColor(250, 120, 0)));
+    mGraph1->setPen(QPen(QColor(0, 180, 60)));
     //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
