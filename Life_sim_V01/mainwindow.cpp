@@ -38,11 +38,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    
+
     //LOG File
     fileName = "logger.txt";
     logger = new Logger(this, fileName, this->ui->plainTextEdit);
     logger->write("Hello Qt");
-
+    Lifes_Protocol.Init_Lifes_SIM(logger);
     timerTCP = new QTimer(this);
     connect(timerTCP, SIGNAL(timeout()), this, SLOT(SendInFreq()));
 
@@ -139,8 +141,7 @@ void MainWindow::on_patientBox_currentIndexChanged(int index)
     this->logger->write(temp);
     temp = temp.replace("/", "\\");
     bloco = bloco.replace("/", "\\");
-    load = new load_data(logger,bloco);
-    lp->defineLoad(load);
+    load = new load_data(bloco);
     load->defineFileDyr(bloco);
 }
 
@@ -149,8 +150,10 @@ void MainWindow::on_patientBox_currentIndexChanged(int index)
 QVector<double> dados;
 void MainWindow::on_SET_clicked()
 {
+
     load->data_parser();
-    this->logger->write("SETADO");
+    lp->defineLoad(load);
+    if(lp->obtemLoad() != NULL )this->logger->write("SETADO");
 
 }
 

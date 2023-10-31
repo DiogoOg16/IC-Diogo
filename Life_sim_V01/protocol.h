@@ -39,9 +39,9 @@ typedef enum {
 typedef struct
 {
     //unsigned short cnt;
-    unsigned short curvas[CURVAS_DEFAULT_SIZE];
+    //unsigned short curvas[CURVAS_DEFAULT_SIZE];
     //unsigned int timestamp;
-    //float curvas[CURVAS_DEFAULT_SIZE];
+    float curvas[CURVAS_DEFAULT_SIZE];
 } _CurvaAccel;
 
 //_Curva de Magnetômetro

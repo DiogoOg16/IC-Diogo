@@ -32,6 +32,9 @@ _ConfigPub Configuracoes_de_Publicacao(void);
 unsigned char Atualiza_Curvas(_command_types comando, unsigned short* curvas, unsigned int timestamp);
 void lifes_sim_in(void);
 void defineLoad(load_data *load);
+load_data* obtemLoad();
+bool checaLData();
+
 };
 
 

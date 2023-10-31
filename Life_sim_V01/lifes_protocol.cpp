@@ -73,6 +73,14 @@ void _Lifes_Protocol::defineLoad(load_data *load){
     lData = load;
 }
 
+load_data* _Lifes_Protocol::obtemLoad(){
+    return lData;
+}
+
+bool _Lifes_Protocol::checaLData(){
+    
+}
+
 void _Lifes_Protocol::Atualiza_inicial()
 {
     Atualiza_Estrutura(CMD_TYPE_SYNC_CLOCK);
@@ -149,9 +157,9 @@ void _Lifes_Protocol::Atualiza_Estrutura(_command_types comando)
             lifes_sim.dados.relogio.Ano = 22;
             break;
         case CMD_TYPE_CRV_ACCEL:
-            lifes_sim.dados.curvas.acelerometer.curvas[0] = 0xAAAA;
-            lifes_sim.dados.curvas.acelerometer.curvas[1] = 0xBBBB;
-            lifes_sim.dados.curvas.acelerometer.curvas[2] = 0xCCCC;
+            lifes_sim.dados.curvas.acelerometer.curvas[0] = 1.0;//lData->elem1Acc_x();
+            lifes_sim.dados.curvas.acelerometer.curvas[1] = 2.0;
+            lifes_sim.dados.curvas.acelerometer.curvas[2] = 3.0;
             //static_cast<float>(lData->elem1Acc_x())
             break;
 

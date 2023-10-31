@@ -1,9 +1,9 @@
 #include "load_data.h"
 
-load_data::load_data(Logger *logger, QString filename)
+load_data::load_data(QString filename)
     //: QObject{parent}
 {
-    this->logger = logger;
+    
     fileDyr = filename;
 }
 load_data::~load_data(){}

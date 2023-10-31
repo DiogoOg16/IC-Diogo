@@ -13,7 +13,7 @@ class load_data : public QObject
 {
     Q_OBJECT
 public:
-        load_data(Logger *logger = nullptr, QString file = "");
+        load_data(QString file = "");
         ~load_data();
         
 
