@@ -13,7 +13,7 @@ class load_data : public QObject
 {
     Q_OBJECT
 public:
-        load_data(QString file = "");
+        load_data(Logger *logger = nullptr, QString file = "");
         ~load_data();
         
 
@@ -38,7 +38,6 @@ public:
     double elem1Azi();
     double elem1Pitch();
     double elem1Roll();
-    double testedefuncao();
 
     void acc_x_Pop();
     void acc_y_Pop();

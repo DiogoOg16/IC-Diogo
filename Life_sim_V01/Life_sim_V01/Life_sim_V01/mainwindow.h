@@ -32,7 +32,6 @@ public:
     Logger *logger;
     QTimer *timerTCP;
     _Lifes_Protocol Lifes_Protocol;
-    
 
 private slots:
 
@@ -92,13 +91,6 @@ private slots:
 
     void on_connectbutton_clicked();
 
-    void criaGrafico();
-
-    void ativaTimer();
-
-    void desativaTimer();
-
-
 private:
     Ui::MainWindow *ui;
     QTimer *timer;
@@ -144,7 +136,7 @@ private:
     QTimer mDataTimer8;
     QTimer mDataTimer9;
     
-    _Lifes_Protocol * lp;
+    _Lifes_Protocol *lp;
     load_data *load;
 
 };

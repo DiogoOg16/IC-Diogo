@@ -1,9 +1,9 @@
 #include "load_data.h"
 
-load_data::load_data(QString filename)
+load_data::load_data(Logger *logger, QString filename)
     //: QObject{parent}
 {
-    
+    this->logger = logger;
     fileDyr = filename;
 }
 load_data::~load_data(){}
@@ -181,9 +181,4 @@ void load_data::pitch_Pop(){
 }
 void load_data::roll_Pop(){
    roll.pop_front();
-}
-
-double load_data::testedefuncao()
-{
-    return 1.0;
 }

@@ -18,7 +18,6 @@
 #include <string.h>
 #include <vector>
 #include <QHostAddress>
-#include "lifes_protocol.h"
 
 //#include <QHostAddress>
 //#include <QPixmap>
@@ -39,14 +38,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    
-
     //LOG File
     fileName = "logger.txt";
     logger = new Logger(this, fileName, this->ui->plainTextEdit);
     logger->write("Hello Qt");
+
+    //Init Protocol
     Lifes_Protocol.Init_Lifes_SIM(logger);
-    //load->data_parser();
+
     timerTCP = new QTimer(this);
     connect(timerTCP, SIGNAL(timeout()), this, SLOT(SendInFreq()));
 
@@ -143,8 +142,8 @@ void MainWindow::on_patientBox_currentIndexChanged(int index)
     this->logger->write(temp);
     temp = temp.replace("/", "\\");
     bloco = bloco.replace("/", "\\");
-    load = new load_data(bloco);
-    
+    load = new load_data(logger,bloco);
+    lp = new _Lifes_Protocol();
     load->defineFileDyr(bloco);
 }
 
@@ -154,49 +153,35 @@ QVector<double> dados;
 void MainWindow::on_SET_clicked()
 {
     load->data_parser();
-   
-    //load->data_parser();
-    //lp->defineLoad(load);
-    //this->logger->write(lp->obtemLoad());
+    if(lp->obtemLData() == NULL ) {
+    this->logger->write("load esta vazio!!!");
+    }
+    else lp->defineLoad(load);
+    this->logger->write("SETADO");
 
 }
 
 
-void MainWindow::criaGrafico()
+
+
+void MainWindow::on_startbutton_clicked()
 {
-    criaGraficoAccX();
-    criaGraficoAccY();
+
+    //mPlot = new QCustomPlot();
+    //setCentralWidget(mPlot);
+    //criaGraficoAccX();
+    /*criaGraficoAccY();
     criaGraficoAccZ();
-    /*criaGraficoGyrX();
+    criaGraficoGyrX();
     criaGraficoGyrY();
     criaGraficoGyrZ();
     criaGraficoAzimuth();
     criaGraficoPitch();
     criaGraficoRoll();*/
-}
-void MainWindow::ativaTimer(){
-
-}
-
-void MainWindow::desativaTimer(){
-
-}
-void MainWindow::on_startbutton_clicked()
-{
+    
     logger->write("Started!");
-    //mPlot = new QCustomPlot();
-    //setCentralWidget(mPlot);
-    if(!Lifes_Protocol.semaforo() && timerTCP->isActive()){
-        timerTCP->stop();
-        criaGrafico();
-    }
-    if(!Lifes_Protocol.semaforo()){        
-        criaGrafico();
-    }else{
-    Lifes_Protocol.reset();
-    timerTCP->start(3000);
-    //Lifes_Protocol.reset();
-    }
+    timerTCP->start(1000);
+
 }
 
 void MainWindow::on_connectbutton_clicked()
@@ -215,15 +200,13 @@ void MainWindow::SendInFreq()
         logger->write("Sent Accel Curve!");
 }
 
-
 void MainWindow::timerSlot()
 {
     //QVector<double> vec =  load->obtemAcc_x();
     //QVector<double> t = load->obtemAcc_x;
-    double ponto = load->elem1Acc_x();
-    Lifes_Protocol.atualiza_acc_x(ponto);
+    float ponto = load->elem1Acc_x();
     if(load->obtemAcc_x().size() != 1){
-        //load->acc_x_Pop();
+        load->acc_x_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph1->addData(mGraph1->dataCount(), ponto);
@@ -253,9 +236,8 @@ void MainWindow::timerSlotY()
     //QVector<double> vec =  load->obtemAcc_x();
     //QVector<double> t = load->obtemAcc_x;
     double ponto = load->elem1Acc_y();
-    Lifes_Protocol.atualiza_acc_y(ponto);
     if(load->obtemAcc_y().size() != 1){
-       // load->acc_y_Pop();
+        load->acc_y_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph2->addData(mGraph2->dataCount(), ponto);
@@ -283,9 +265,8 @@ void MainWindow::timerSlotAccZ(){
     //QVector<double> vec =  load->obtemAcc_x();
     //QVector<double> t = load->obtemAcc_x;
     double ponto = load->elem1Acc_z();
-    Lifes_Protocol.atualiza_acc_z(ponto);
     if(load->obtemAcc_z().size() != 1){
-        //load->acc_z_Pop();
+        load->acc_z_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph3->addData(mGraph3->dataCount(), ponto);
@@ -488,7 +469,7 @@ void MainWindow::criaGraficoAccX(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
-    mDataTimer.start(3000);
+    mDataTimer.start(40);
 }
 
 void MainWindow::criaGraficoAccY(){
@@ -512,7 +493,7 @@ void MainWindow::criaGraficoAccY(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer2, SIGNAL(timeout()), this, SLOT(timerSlotY()));
-    mDataTimer2.start(3000);
+    mDataTimer2.start(40);
 }
 
 void MainWindow::criaGraficoAccZ(){
@@ -536,7 +517,7 @@ void MainWindow::criaGraficoAccZ(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer3, SIGNAL(timeout()), this, SLOT(timerSlotAccZ()));
-    mDataTimer3.start(3000);
+    mDataTimer3.start(40);
 }
 
 void MainWindow::criaGraficoGyrX(){
@@ -560,7 +541,7 @@ void MainWindow::criaGraficoGyrX(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer4, SIGNAL(timeout()), this, SLOT(timerSlotGyrX()));
-    mDataTimer4.start(3000);
+    mDataTimer4.start(40);
 }
 
 void MainWindow::criaGraficoGyrY(){
@@ -584,7 +565,7 @@ void MainWindow::criaGraficoGyrY(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer5, SIGNAL(timeout()), this, SLOT(timerSlotGyrY()));
-    mDataTimer5.start(3000);
+    mDataTimer5.start(40);
 }
 
 void MainWindow::criaGraficoGyrZ(){
@@ -608,7 +589,7 @@ void MainWindow::criaGraficoGyrZ(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer6, SIGNAL(timeout()), this, SLOT(timerSlotGyrZ()));
-    mDataTimer6.start(3000);
+    mDataTimer6.start(40);
 }
 
 void MainWindow::criaGraficoAzimuth(){
@@ -632,7 +613,7 @@ void MainWindow::criaGraficoAzimuth(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer7, SIGNAL(timeout()), this, SLOT(timerSlotAzimuth()));
-    mDataTimer7.start(3000);
+    mDataTimer7.start(40);
 }
 
 void MainWindow::criaGraficoPitch(){
@@ -656,7 +637,7 @@ void MainWindow::criaGraficoPitch(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer8, SIGNAL(timeout()), this, SLOT(timerSlotPitch()));
-    mDataTimer8.start(3000);
+    mDataTimer8.start(40);
 }
 
 void MainWindow::criaGraficoRoll(){
@@ -680,7 +661,7 @@ void MainWindow::criaGraficoRoll(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer9, SIGNAL(timeout()), this, SLOT(timerSlotRoll()));
-    mDataTimer9.start(3000);
+    mDataTimer9.start(40);
 }
 
 
