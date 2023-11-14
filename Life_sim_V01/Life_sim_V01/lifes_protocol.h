@@ -22,6 +22,15 @@ _lifes_sim_tools lifes_sim_tools;
 bool accx = false;
 bool accy = false;
 bool accz = false;
+
+bool gyrx = false;
+bool gyry = false;
+bool gyrz = false;
+
+bool azi = false;
+bool pitch = false;
+bool roll = false;
+
 private:
 Logger* logger;
 //load_data *lData;
@@ -32,9 +41,18 @@ void Atualiza_inicial();
 unsigned char TestaCRC(unsigned char crc, unsigned char data);
 unsigned char lifes_SIM_comando(_command_types comando);
 void Atualiza_Estrutura(_command_types comando);
+
 void atualiza_acc_x(double ponto);
 void atualiza_acc_y(double ponto);
 void atualiza_acc_z(double ponto);
+
+void atualiza_gyr_x(double ponto);
+void atualiza_gyr_y(double ponto);
+void atualiza_gyr_z(double ponto);
+
+void atualiza_azi(double ponto);
+void atualiza_pitch(double ponto);
+void atualiza_roll(double ponto);
 
 bool semaforo();
 void reset();

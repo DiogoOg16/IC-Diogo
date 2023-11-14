@@ -155,6 +155,18 @@ double load_data::elem1Roll(){
     return roll[0];
 }
 
+void load_data::pop_all(){
+    acc_x.pop_front();
+    acc_y.pop_front();
+    acc_z.pop_front();
+    gyr_x.pop_front();
+    gyr_y.pop_front();
+    gyr_z.pop_front();
+    azi.pop_front();
+    pitch.pop_front();
+    roll.pop_front();
+    
+}
 void load_data::acc_x_Pop(){
     acc_x.pop_front();
 }

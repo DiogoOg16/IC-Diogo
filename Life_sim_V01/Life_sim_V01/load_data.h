@@ -40,6 +40,7 @@ public:
     double elem1Roll();
     double testedefuncao();
 
+    void pop_all();
     void acc_x_Pop();
     void acc_y_Pop();
     void acc_z_Pop();

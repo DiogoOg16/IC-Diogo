@@ -167,36 +167,23 @@ void MainWindow::criaGrafico()
     criaGraficoAccX();
     criaGraficoAccY();
     criaGraficoAccZ();
-    /*criaGraficoGyrX();
+    criaGraficoGyrX();
     criaGraficoGyrY();
     criaGraficoGyrZ();
     criaGraficoAzimuth();
     criaGraficoPitch();
-    criaGraficoRoll();*/
-}
-void MainWindow::ativaTimer(){
-
+    criaGraficoRoll();
 }
 
-void MainWindow::desativaTimer(){
-
-}
 void MainWindow::on_startbutton_clicked()
 {
     logger->write("Started!");
     //mPlot = new QCustomPlot();
     //setCentralWidget(mPlot);
-    if(!Lifes_Protocol.semaforo() && timerTCP->isActive()){
-        timerTCP->stop();
-        criaGrafico();
-    }
-    if(!Lifes_Protocol.semaforo()){        
-        criaGrafico();
-    }else{
-    Lifes_Protocol.reset();
-    timerTCP->start(3000);
-    //Lifes_Protocol.reset();
-    }
+
+    criaGrafico();
+    //timerTCP->start(0.1);
+
 }
 
 void MainWindow::on_connectbutton_clicked()
@@ -210,9 +197,10 @@ void MainWindow::on_connectbutton_clicked()
 void MainWindow::SendInFreq()
 {
         Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_ACCEL);
-        //Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_MAG);
-        //Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_GYR);
+        Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_MAG);
+        Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_GYR);
         logger->write("Sent Accel Curve!");
+        desativaTimer();
 }
 
 
@@ -311,8 +299,9 @@ void MainWindow::timerSlotAccZ(){
 
 void MainWindow::timerSlotGyrX(){
     double ponto = load->elem1Gyr_x();
+    Lifes_Protocol.atualiza_gyr_x(ponto);
     if(load->obtemGyr_x().size() != 1){
-        load->gyr_x_Pop();
+        //load->gyr_x_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph4->addData(mGraph4->dataCount(), ponto);
@@ -335,8 +324,9 @@ void MainWindow::timerSlotGyrX(){
 
 void MainWindow::timerSlotGyrY(){
     double ponto = load->elem1Gyr_y();
+    Lifes_Protocol.atualiza_gyr_y(ponto);
     if(load->obtemGyr_y().size() != 1){
-        load->gyr_y_Pop();
+        //load->gyr_y_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph5->addData(mGraph5->dataCount(), ponto);
@@ -359,8 +349,9 @@ void MainWindow::timerSlotGyrY(){
 
 void MainWindow::timerSlotGyrZ(){
     double ponto = load->elem1Gyr_z();
+    Lifes_Protocol.atualiza_gyr_z(ponto);
     if(load->obtemGyr_z().size() != 1){
-        load->gyr_z_Pop();
+        //load->gyr_z_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph6->addData(mGraph6->dataCount(), ponto);
@@ -383,8 +374,9 @@ void MainWindow::timerSlotGyrZ(){
 
 void MainWindow::timerSlotAzimuth(){
     double ponto = load->elem1Azi();
+    Lifes_Protocol.atualiza_azi(ponto);
     if(load->obtemAzi().size() != 1){
-        load->azi_Pop();
+        //load->azi_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph7->addData(mGraph7->dataCount(), ponto);
@@ -407,8 +399,9 @@ void MainWindow::timerSlotAzimuth(){
 
 void MainWindow::timerSlotPitch(){
     double ponto = load->elem1Pitch();
+    Lifes_Protocol.atualiza_pitch(ponto);
     if(load->obtemPitch().size() != 1){
-        load->pitch_Pop();
+        //load->pitch_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph8->addData(mGraph8->dataCount(), ponto);
@@ -431,8 +424,9 @@ void MainWindow::timerSlotPitch(){
 
 void MainWindow::timerSlotRoll(){
     double ponto = load->elem1Roll();
+    Lifes_Protocol.atualiza_roll(ponto);
     if(load->obtemRoll().size() != 1){
-        load->roll_Pop();
+        //load->roll_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph9->addData(mGraph9->dataCount(), ponto);
@@ -451,6 +445,27 @@ void MainWindow::timerSlotRoll(){
     mTag9->setText(QString::number(graph2Value, 'f', 2));
 
     ui->roll_widget->replot();
+
+
+     ativaTimer();
+
+}
+
+void MainWindow::ativaTimer(){
+     if(load->obtemRoll().size() != 1){
+        load->pop_all();
+     }
+
+     mDataTimer.stop();
+     timerTCP->start(0.1);
+}
+
+void MainWindow::desativaTimer(){
+     if(Lifes_Protocol.semaforo()){
+        timerTCP->stop();
+        Lifes_Protocol.reset();
+        mDataTimer.start(0.1);
+     }
 }
 
 void MainWindow::defineElements(double e, int index){
@@ -472,8 +487,8 @@ void MainWindow::criaGraficoAccX(){
     connect(ui->acc_x_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_x_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->acc_x_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph1 = ui->acc_x_widget->addGraph(ui->acc_x_widget->xAxis, ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -488,7 +503,8 @@ void MainWindow::criaGraficoAccX(){
     //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
-    mDataTimer.start(3000);
+    mDataTimer.start(0.1);
+
 }
 
 void MainWindow::criaGraficoAccY(){
@@ -496,8 +512,8 @@ void MainWindow::criaGraficoAccY(){
     connect(ui->acc_y_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_y_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->acc_y_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->acc_y_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->acc_y_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->acc_y_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->acc_y_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph2 = ui->acc_y_widget->addGraph(ui->acc_y_widget->xAxis, ui->acc_y_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -511,8 +527,8 @@ void MainWindow::criaGraficoAccY(){
     //mTag2 = new AxisTag(mGraph2->valueAxis());
     //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer2, SIGNAL(timeout()), this, SLOT(timerSlotY()));
-    mDataTimer2.start(3000);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotY()));
+    //mDataTimer2.start(0.1);
 }
 
 void MainWindow::criaGraficoAccZ(){
@@ -520,8 +536,8 @@ void MainWindow::criaGraficoAccZ(){
     connect(ui->acc_z_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_z_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->acc_z_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->acc_z_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->acc_z_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->acc_z_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->acc_z_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph3 = ui->acc_z_widget->addGraph(ui->acc_z_widget->xAxis, ui->acc_z_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -535,8 +551,8 @@ void MainWindow::criaGraficoAccZ(){
     //mTag2 = new AxisTag(mGraph2->valueAxis());
     //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer3, SIGNAL(timeout()), this, SLOT(timerSlotAccZ()));
-    mDataTimer3.start(3000);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotAccZ()));
+    //mDataTimer3.start(0.1);
 }
 
 void MainWindow::criaGraficoGyrX(){
@@ -544,8 +560,8 @@ void MainWindow::criaGraficoGyrX(){
     connect(ui->gyr_x_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->gyr_x_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->gyr_x_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->gyr_x_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->gyr_x_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->gyr_x_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->gyr_x_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph4 = ui->gyr_x_widget->addGraph(ui->gyr_x_widget->xAxis, ui->gyr_x_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -559,8 +575,8 @@ void MainWindow::criaGraficoGyrX(){
     //mTag2 = new AxisTag(mGraph2->valueAxis());
     //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer4, SIGNAL(timeout()), this, SLOT(timerSlotGyrX()));
-    mDataTimer4.start(3000);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotGyrX()));
+   // mDataTimer4.start(0.1);
 }
 
 void MainWindow::criaGraficoGyrY(){
@@ -568,8 +584,8 @@ void MainWindow::criaGraficoGyrY(){
     connect(ui->gyr_y_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->gyr_y_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->gyr_y_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->gyr_y_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->gyr_y_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->gyr_y_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->gyr_y_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph5 = ui->gyr_y_widget->addGraph(ui->gyr_y_widget->xAxis, ui->gyr_y_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -583,8 +599,8 @@ void MainWindow::criaGraficoGyrY(){
     //mTag2 = new AxisTag(mGraph2->valueAxis());
     //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer5, SIGNAL(timeout()), this, SLOT(timerSlotGyrY()));
-    mDataTimer5.start(3000);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotGyrY()));
+    //mDataTimer5.start(0.1);
 }
 
 void MainWindow::criaGraficoGyrZ(){
@@ -592,8 +608,8 @@ void MainWindow::criaGraficoGyrZ(){
     connect(ui->gyr_z_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->gyr_z_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->gyr_z_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->gyr_z_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->gyr_z_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->gyr_z_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->gyr_z_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph6 = ui->gyr_z_widget->addGraph(ui->gyr_z_widget->xAxis, ui->gyr_z_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -607,8 +623,8 @@ void MainWindow::criaGraficoGyrZ(){
     //mTag2 = new AxisTag(mGraph2->valueAxis());
     //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer6, SIGNAL(timeout()), this, SLOT(timerSlotGyrZ()));
-    mDataTimer6.start(3000);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotGyrZ()));
+    //mDataTimer6.start(0.1);
 }
 
 void MainWindow::criaGraficoAzimuth(){
@@ -616,8 +632,8 @@ void MainWindow::criaGraficoAzimuth(){
     connect(ui->azimuth_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->azimuth_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->azimuth_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->azimuth_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->azimuth_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->azimuth_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->azimuth_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph7 = ui->azimuth_widget->addGraph(ui->azimuth_widget->xAxis, ui->azimuth_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -631,8 +647,8 @@ void MainWindow::criaGraficoAzimuth(){
     //mTag2 = new AxisTag(mGraph2->valueAxis());
     //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer7, SIGNAL(timeout()), this, SLOT(timerSlotAzimuth()));
-    mDataTimer7.start(3000);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotAzimuth()));
+    //mDataTimer7.start(0.1);
 }
 
 void MainWindow::criaGraficoPitch(){
@@ -640,8 +656,8 @@ void MainWindow::criaGraficoPitch(){
     connect(ui->pitch_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->pitch_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->pitch_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->pitch_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->pitch_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->pitch_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->pitch_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph8 = ui->pitch_widget->addGraph(ui->pitch_widget->xAxis, ui->pitch_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -655,8 +671,8 @@ void MainWindow::criaGraficoPitch(){
     //mTag2 = new AxisTag(mGraph2->valueAxis());
     //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer8, SIGNAL(timeout()), this, SLOT(timerSlotPitch()));
-    mDataTimer8.start(3000);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotPitch()));
+    //mDataTimer8.start(0.1);
 }
 
 void MainWindow::criaGraficoRoll(){
@@ -664,8 +680,8 @@ void MainWindow::criaGraficoRoll(){
     connect(ui->roll_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->roll_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
     //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->roll_widget->axisRect()->addAxis(QCPAxis::atRight);
-    ui->roll_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
-    ui->roll_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
+    ui->roll_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(0.1); // add some padding to have space for tags
+    ui->roll_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(0.1); // add some padding to have space for tags
 
     // create graphs:
     mGraph9 = ui->roll_widget->addGraph(ui->roll_widget->xAxis, ui->roll_widget->axisRect()->axis(QCPAxis::atRight, 0));
@@ -679,8 +695,8 @@ void MainWindow::criaGraficoRoll(){
     //mTag2 = new AxisTag(mGraph2->valueAxis());
     //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer9, SIGNAL(timeout()), this, SLOT(timerSlotRoll()));
-    mDataTimer9.start(3000);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotRoll()));
+    //mDataTimer9.start(0.1);
 }
 
 

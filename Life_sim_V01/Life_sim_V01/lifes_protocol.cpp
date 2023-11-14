@@ -67,6 +67,8 @@ void _Lifes_Protocol::Init_Lifes_SIM(Logger* logger_pointer)
 
     lifes_sim.st = lifes_sim.ACTIVE;  //Stream constante de dados
 
+
+
 }
 
 /*void _Lifes_Protocol::defineLoad(load_data *load){
@@ -144,7 +146,9 @@ unsigned char _Lifes_Protocol::lifes_SIM_comando(_command_types comando)
 
 bool _Lifes_Protocol::semaforo()
 {
-    if(accx == true && accy == true && accz == true){
+    if(accx == true && accy == true && accz == true &&
+        gyrx == true && gyry == true && gyrz == true &&
+        azi == true && pitch == true && roll == true ){
         
         return true;
     }
@@ -156,6 +160,12 @@ void _Lifes_Protocol::reset()
     accx = false;
     accy = false;
     accz = false;
+    gyrx = false;
+    gyry = false;
+    gyrz = false;
+    azi = false;
+    pitch = false;
+    roll = false;
 }
 
 void _Lifes_Protocol::atualiza_acc_x(double ponto)
@@ -176,6 +186,38 @@ void _Lifes_Protocol::atualiza_acc_z(double ponto)
     accz = true;
 }
 
+void _Lifes_Protocol::atualiza_gyr_x(double ponto)
+{
+    lifes_sim.dados.curvas.gyroscope.curvas[0] = (float)ponto;
+    gyrx = true;
+}
+
+void _Lifes_Protocol::atualiza_gyr_y(double ponto)
+{
+    lifes_sim.dados.curvas.gyroscope.curvas[1] = (float)ponto;
+    gyry = true;
+}
+
+void _Lifes_Protocol::atualiza_gyr_z(double ponto)
+{
+    lifes_sim.dados.curvas.gyroscope.curvas[2] = (float)ponto;
+    gyrz = true;
+}
+
+void _Lifes_Protocol::atualiza_azi(double ponto){
+    lifes_sim.dados.curvas.magnetometer.curvas[0] = (float)ponto;
+    azi = true;
+}
+
+void _Lifes_Protocol::atualiza_pitch(double ponto){
+    lifes_sim.dados.curvas.magnetometer.curvas[1] = (float)ponto;
+    pitch = true;
+}
+
+void _Lifes_Protocol::atualiza_roll(double ponto){
+    lifes_sim.dados.curvas.magnetometer.curvas[2] = (float)ponto;
+    roll = true;
+}
 
 /*	Tras os dados do fluxo principal para o fluxo de envio*/
 void _Lifes_Protocol::Atualiza_Estrutura(_command_types comando)
