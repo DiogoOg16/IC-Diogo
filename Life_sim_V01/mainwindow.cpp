@@ -18,6 +18,7 @@
 #include <string.h>
 #include <vector>
 #include <QHostAddress>
+#include "lifes_protocol.h"
 
 //#include <QHostAddress>
 //#include <QPixmap>
@@ -38,15 +39,19 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+
+
     //LOG File
     fileName = "logger.txt";
     logger = new Logger(this, fileName, this->ui->plainTextEdit);
     logger->write("Hello Qt");
-
+    Lifes_Protocol.Init_Lifes_SIM(logger);
+    //load->data_parser();
     timerTCP = new QTimer(this);
     connect(timerTCP, SIGNAL(timeout()), this, SLOT(SendInFreq()));
+    timerCheck = new QTimer(this);
+    connect(timerCheck, SIGNAL(timeout()), this, SLOT(obtemAmostras()));
 
-//QVBoxLayout *layout = new QVBoxLayout;
 }
 
 MainWindow::~MainWindow()
@@ -90,8 +95,6 @@ void MainWindow::on_directoryBox_currentIndexChanged(int index)
 
     //Pegando a lista de arquivos dentro da atividade escolhida
     QStringList files = fileDir.entryList(QDir::Files);
-    //this->logger->write(files);
-
 
     this->ui->patientBox->clear();
     this->ui->patientBox->addItems(files);
@@ -139,8 +142,8 @@ void MainWindow::on_patientBox_currentIndexChanged(int index)
     this->logger->write(temp);
     temp = temp.replace("/", "\\");
     bloco = bloco.replace("/", "\\");
-    load = new load_data(logger,bloco);
-    lp->defineLoad(load);
+    load = new load_data(bloco);
+
     load->defineFileDyr(bloco);
 }
 
@@ -150,19 +153,18 @@ QVector<double> dados;
 void MainWindow::on_SET_clicked()
 {
     load->data_parser();
-    this->logger->write("SETADO");
+    logger->write("DataSet definido!");
+
+    //load->data_parser();
+    //lp->defineLoad(load);
+    //this->logger->write(lp->obtemLoad());
 
 }
 
 
-
-
-void MainWindow::on_startbutton_clicked()
+void MainWindow::criaGrafico()
 {
-
-    //mPlot = new QCustomPlot();
-    //setCentralWidget(mPlot);
-    /*criaGraficoAccX();
+    criaGraficoAccX();
     criaGraficoAccY();
     criaGraficoAccZ();
     criaGraficoGyrX();
@@ -170,10 +172,38 @@ void MainWindow::on_startbutton_clicked()
     criaGraficoGyrZ();
     criaGraficoAzimuth();
     criaGraficoPitch();
-    criaGraficoRoll();*/
-    
+    criaGraficoRoll();
+}
+bool pGrafico =0;
+bool pEnvio = 0;
+
+
+int tempoTimer = 1;
+
+void MainWindow::on_stopbutton_clicked()
+{
+    //stop = true;
+    if(mDataTimer.isActive()) mDataTimer.stop();
+    if(timerTCP->isActive()) timerTCP->stop();
+    timerCheck->stop();
+}
+
+void MainWindow::on_startbutton_clicked()
+{
     logger->write("Started!");
-    timerTCP->start(1000);
+    //timerTCP->start(tempoTimer);
+    timerCheck->start(1000);
+    if(pGrafico == 0 && pEnvio == 0)
+    {
+        criaGrafico();
+        pGrafico = 1;
+    }
+    if(pGrafico == 1){
+        mDataTimer.start();
+    }
+    if(pEnvio == 1){
+        timerTCP->start();
+    }
 
 }
 
@@ -185,40 +215,81 @@ void MainWindow::on_connectbutton_clicked()
     else logger->write("Something is wrong!");
 }
 
+unsigned int timestamp = 1;
 void MainWindow::SendInFreq()
 {
         Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_ACCEL);
         Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_MAG);
         Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_GYR);
-        logger->write("Sent Accel Curve!");
+        timestamp++;
+        //logger->write("Sent Accel Curve!");
+        //contador += 9;
+        desativaTimer();
 }
+
+QString amostrasPorSegundo;
+void MainWindow::obtemAmostras()
+{
+
+        amostrasPorSegundo = QString::number(contador);
+        logger->write(amostrasPorSegundo);
+        contador = 0;
+}
+
+void MainWindow::ativaTimer(){
+        //jogar isso pro desativa timer
+        /*if(load->obtemRoll().size() != 1){
+
+        load->pop_all();
+     }else{
+        logger->write("Acabou o envio!!!");
+     }*/
+
+        mDataTimer.stop();
+        pGrafico = 0;
+        pEnvio = 1;
+        timerTCP->start(tempoTimer);
+}
+
+void MainWindow::desativaTimer(){
+        if(Lifes_Protocol.semaforo()){
+        if(load->obtemRoll().size() != 1){
+
+            load->pop_all();
+        }else{
+            logger->write("Acabou o envio!!!");
+        }
+        contador++;
+        timerTCP->stop();
+        pGrafico = 1;
+        pEnvio = 0;
+        Lifes_Protocol.reset();
+        mDataTimer.start(tempoTimer);
+        }
+}
+
+
+
 
 void MainWindow::timerSlot()
 {
-    //QVector<double> vec =  load->obtemAcc_x();
-    //QVector<double> t = load->obtemAcc_x;
+
     double ponto = load->elem1Acc_x();
-    if(load->obtemAcc_x().size() != 1){
-        load->acc_x_Pop();
-    }
+    Lifes_Protocol.atualiza_acc_x(ponto,timestamp);
+
     // calculate and add a new data point to each graph:
     mGraph1->addData(mGraph1->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->acc_x_widget->xAxis->rescale();
     mGraph1->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->acc_x_widget->xAxis->setRange(ui->acc_x_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph1Value = mGraph1->dataMainValue(mGraph1->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag1->updatePosition(graph1Value);
-    //mTag2->updatePosition(graph2Value);
     mTag1->setText(QString::number(graph1Value, 'f', 2));
-    //mTag2->setText(QString::number(graph2Value, 'f', 2));
-     //this->logger->write("timerSlot");
+
     ui->acc_x_widget->replot();
 
 }
@@ -226,58 +297,43 @@ void MainWindow::timerSlot()
 
 void MainWindow::timerSlotY()
 {
-    //QVector<double> vec =  load->obtemAcc_x();
-    //QVector<double> t = load->obtemAcc_x;
     double ponto = load->elem1Acc_y();
-    if(load->obtemAcc_y().size() != 1){
-        load->acc_y_Pop();
-    }
+    Lifes_Protocol.atualiza_acc_y(ponto);
+
     // calculate and add a new data point to each graph:
     mGraph2->addData(mGraph2->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->acc_y_widget->xAxis->rescale();
     mGraph2->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->acc_y_widget->xAxis->setRange(ui->acc_y_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag2->updatePosition(graph2Value);
-    //mTag2->updatePosition(graph2Value);
     mTag2->setText(QString::number(graph2Value, 'f', 2));
-    //mTag2->setText(QString::number(graph2Value, 'f', 2));
 
     ui->acc_y_widget->replot();
 }
 
 
 void MainWindow::timerSlotAccZ(){
-    //QVector<double> vec =  load->obtemAcc_x();
-    //QVector<double> t = load->obtemAcc_x;
+
     double ponto = load->elem1Acc_z();
-    if(load->obtemAcc_z().size() != 1){
-        load->acc_z_Pop();
-    }
+    Lifes_Protocol.atualiza_acc_z(ponto);
+
     // calculate and add a new data point to each graph:
     mGraph3->addData(mGraph3->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->acc_z_widget->xAxis->rescale();
     mGraph3->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->acc_z_widget->xAxis->setRange(ui->acc_z_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph2Value = mGraph3->dataMainValue(mGraph3->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag3->updatePosition(graph2Value);
-    //mTag2->updatePosition(graph2Value);
     mTag3->setText(QString::number(graph2Value, 'f', 2));
-    //mTag2->setText(QString::number(graph2Value, 'f', 2));
 
     ui->acc_z_widget->replot();
 
@@ -285,22 +341,18 @@ void MainWindow::timerSlotAccZ(){
 
 void MainWindow::timerSlotGyrX(){
     double ponto = load->elem1Gyr_x();
-    if(load->obtemGyr_x().size() != 1){
-        load->gyr_x_Pop();
-    }
+    Lifes_Protocol.atualiza_gyr_x(ponto,timestamp);
+
     // calculate and add a new data point to each graph:
     mGraph4->addData(mGraph4->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->gyr_x_widget->xAxis->rescale();
     mGraph4->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->gyr_x_widget->xAxis->setRange(ui->gyr_x_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph2Value = mGraph4->dataMainValue(mGraph4->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag4->updatePosition(graph2Value);
     mTag4->setText(QString::number(graph2Value, 'f', 2));
 
@@ -309,22 +361,20 @@ void MainWindow::timerSlotGyrX(){
 
 void MainWindow::timerSlotGyrY(){
     double ponto = load->elem1Gyr_y();
+    Lifes_Protocol.atualiza_gyr_y(ponto);
     if(load->obtemGyr_y().size() != 1){
-        load->gyr_y_Pop();
+        //load->gyr_y_Pop();
     }
     // calculate and add a new data point to each graph:
     mGraph5->addData(mGraph5->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->gyr_y_widget->xAxis->rescale();
     mGraph5->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->gyr_y_widget->xAxis->setRange(ui->gyr_y_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph2Value = mGraph5->dataMainValue(mGraph5->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag5->updatePosition(graph2Value);
     mTag5->setText(QString::number(graph2Value, 'f', 2));
 
@@ -333,46 +383,37 @@ void MainWindow::timerSlotGyrY(){
 
 void MainWindow::timerSlotGyrZ(){
     double ponto = load->elem1Gyr_z();
-    if(load->obtemGyr_z().size() != 1){
-        load->gyr_z_Pop();
-    }
+    Lifes_Protocol.atualiza_gyr_z(ponto);
+
     // calculate and add a new data point to each graph:
     mGraph6->addData(mGraph6->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->gyr_z_widget->xAxis->rescale();
     mGraph6->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->gyr_z_widget->xAxis->setRange(ui->gyr_z_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph2Value = mGraph6->dataMainValue(mGraph6->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag6->updatePosition(graph2Value);
     mTag6->setText(QString::number(graph2Value, 'f', 2));
-    //this->logger->write("timerSlot");
     ui->gyr_z_widget->replot();
 }
 
 void MainWindow::timerSlotAzimuth(){
     double ponto = load->elem1Azi();
-    if(load->obtemAzi().size() != 1){
-        load->azi_Pop();
-    }
+    Lifes_Protocol.atualiza_azi(ponto,timestamp);
+
     // calculate and add a new data point to each graph:
     mGraph7->addData(mGraph7->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->azimuth_widget->xAxis->rescale();
     mGraph7->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->azimuth_widget->xAxis->setRange(ui->azimuth_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph2Value = mGraph7->dataMainValue(mGraph7->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag7->updatePosition(graph2Value);
     mTag7->setText(QString::number(graph2Value, 'f', 2));
 
@@ -381,22 +422,18 @@ void MainWindow::timerSlotAzimuth(){
 
 void MainWindow::timerSlotPitch(){
     double ponto = load->elem1Pitch();
-    if(load->obtemPitch().size() != 1){
-        load->pitch_Pop();
-    }
+    Lifes_Protocol.atualiza_pitch(ponto);
+
     // calculate and add a new data point to each graph:
     mGraph8->addData(mGraph8->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->pitch_widget->xAxis->rescale();
     mGraph8->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->pitch_widget->xAxis->setRange(ui->pitch_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph2Value = mGraph8->dataMainValue(mGraph8->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag8->updatePosition(graph2Value);
     mTag8->setText(QString::number(graph2Value, 'f', 2));
 
@@ -405,256 +442,197 @@ void MainWindow::timerSlotPitch(){
 
 void MainWindow::timerSlotRoll(){
     double ponto = load->elem1Roll();
-    if(load->obtemRoll().size() != 1){
-        load->roll_Pop();
-    }
+    Lifes_Protocol.atualiza_roll(ponto);
+
     // calculate and add a new data point to each graph:
     mGraph9->addData(mGraph9->dataCount(), ponto);
-    //mGraph2->addData(mGraph2->dataCount(), qCos(mGraph2->dataCount()/50.0)+qSin(mGraph2->dataCount()/50.0/0.4364)*0.15);
 
     // make key axis range scroll with the data:
     ui->roll_widget->xAxis->rescale();
     mGraph9->rescaleValueAxis(false, true);
-    //mGraph2->rescaleValueAxis(false, true);
     ui->roll_widget->xAxis->setRange(ui->roll_widget->xAxis->range().upper, 100, Qt::AlignRight);
 
     // update the vertical axis tag positions and texts to match the rightmost data point of the graphs:
     double graph2Value = mGraph9->dataMainValue(mGraph9->dataCount()-1);
-    //double graph2Value = mGraph2->dataMainValue(mGraph2->dataCount()-1);
     mTag9->updatePosition(graph2Value);
     mTag9->setText(QString::number(graph2Value, 'f', 2));
 
     ui->roll_widget->replot();
+
+
+     ativaTimer();
+
 }
 
-void MainWindow::defineElements(double e, int index){
-    elements[index] = e;
-}
 
-double MainWindow::obtemElements(int index){
-    return elements[index];
-}
 
-void MainWindow::on_stopbutton_clicked()
-{
-    stop = true;
-}
+
+
 
 void MainWindow::criaGraficoAccX(){
     // configure plot to have two right axes:
     ui->acc_x_widget->yAxis->setTickLabels(false);
     connect(ui->acc_x_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_x_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->acc_x_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph1 = ui->acc_x_widget->addGraph(ui->acc_x_widget->xAxis, ui->acc_x_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph1->setPen(QPen(QColor(0, 180, 60)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag1 = new AxisTag(mGraph1->valueAxis());
     mTag1->setPen(mGraph1->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
     connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlot()));
-    mDataTimer.start(40);
+    mDataTimer.start(tempoTimer);
+
 }
 
 void MainWindow::criaGraficoAccY(){
     ui->acc_y_widget->yAxis->setTickLabels(false);
     connect(ui->acc_y_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_y_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->acc_y_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->acc_y_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->acc_y_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph2 = ui->acc_y_widget->addGraph(ui->acc_y_widget->xAxis, ui->acc_y_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph2->setPen(QPen(QColor(0, 0, 255)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag2 = new AxisTag(mGraph2->valueAxis());
     mTag2->setPen(mGraph2->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer2, SIGNAL(timeout()), this, SLOT(timerSlotY()));
-    mDataTimer2.start(40);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotY()));
+
 }
 
 void MainWindow::criaGraficoAccZ(){
     ui->acc_z_widget->yAxis->setTickLabels(false);
     connect(ui->acc_z_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->acc_z_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->acc_z_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->acc_z_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->acc_z_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph3 = ui->acc_z_widget->addGraph(ui->acc_z_widget->xAxis, ui->acc_z_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph3->setPen(QPen(QColor(0, 0, 255)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag3 = new AxisTag(mGraph3->valueAxis());
     mTag3->setPen(mGraph3->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer3, SIGNAL(timeout()), this, SLOT(timerSlotAccZ()));
-    mDataTimer3.start(40);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotAccZ()));
 }
 
 void MainWindow::criaGraficoGyrX(){
     ui->gyr_x_widget->yAxis->setTickLabels(false);
     connect(ui->gyr_x_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->gyr_x_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->gyr_x_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->gyr_x_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->gyr_x_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph4 = ui->gyr_x_widget->addGraph(ui->gyr_x_widget->xAxis, ui->gyr_x_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph4->setPen(QPen(QColor(0, 0, 255)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag4 = new AxisTag(mGraph4->valueAxis());
     mTag4->setPen(mGraph4->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer4, SIGNAL(timeout()), this, SLOT(timerSlotGyrX()));
-    mDataTimer4.start(40);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotGyrX()));
 }
 
 void MainWindow::criaGraficoGyrY(){
     ui->gyr_y_widget->yAxis->setTickLabels(false);
     connect(ui->gyr_y_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->gyr_y_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->gyr_y_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->gyr_y_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->gyr_y_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph5 = ui->gyr_y_widget->addGraph(ui->gyr_y_widget->xAxis, ui->gyr_y_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph5->setPen(QPen(QColor(0, 0, 255)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag5 = new AxisTag(mGraph5->valueAxis());
     mTag5->setPen(mGraph5->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer5, SIGNAL(timeout()), this, SLOT(timerSlotGyrY()));
-    mDataTimer5.start(40);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotGyrY()));
 }
 
 void MainWindow::criaGraficoGyrZ(){
     ui->gyr_z_widget->yAxis->setTickLabels(false);
     connect(ui->gyr_z_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->gyr_z_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->gyr_z_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->gyr_z_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->gyr_z_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph6 = ui->gyr_z_widget->addGraph(ui->gyr_z_widget->xAxis, ui->gyr_z_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph6->setPen(QPen(QColor(0, 0, 255)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag6 = new AxisTag(mGraph6->valueAxis());
     mTag6->setPen(mGraph6->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer6, SIGNAL(timeout()), this, SLOT(timerSlotGyrZ()));
-    mDataTimer6.start(40);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotGyrZ()));
 }
 
 void MainWindow::criaGraficoAzimuth(){
     ui->azimuth_widget->yAxis->setTickLabels(false);
     connect(ui->azimuth_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->azimuth_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->azimuth_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->azimuth_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->azimuth_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph7 = ui->azimuth_widget->addGraph(ui->azimuth_widget->xAxis, ui->azimuth_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph7->setPen(QPen(QColor(0, 0, 255)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag7 = new AxisTag(mGraph7->valueAxis());
     mTag7->setPen(mGraph7->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer7, SIGNAL(timeout()), this, SLOT(timerSlotAzimuth()));
-    mDataTimer7.start(40);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotAzimuth()));
 }
 
 void MainWindow::criaGraficoPitch(){
     ui->pitch_widget->yAxis->setTickLabels(false);
     connect(ui->pitch_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->pitch_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->pitch_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->pitch_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->pitch_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph8 = ui->pitch_widget->addGraph(ui->pitch_widget->xAxis, ui->pitch_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph8->setPen(QPen(QColor(0, 0, 255)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag8 = new AxisTag(mGraph8->valueAxis());
     mTag8->setPen(mGraph8->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer8, SIGNAL(timeout()), this, SLOT(timerSlotPitch()));
-    mDataTimer8.start(40);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotPitch()));
 }
 
 void MainWindow::criaGraficoRoll(){
     ui->roll_widget->yAxis->setTickLabels(false);
     connect(ui->roll_widget->yAxis2, SIGNAL(rangeChanged(QCPRange)), ui->roll_widget->yAxis, SLOT(setRange(QCPRange))); // left axis only mirrors inner right axis
-    //ui->acc_x_widget->yAxis2->setVisible(true);
     ui->roll_widget->axisRect()->addAxis(QCPAxis::atRight);
     ui->roll_widget->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(30); // add some padding to have space for tags
     ui->roll_widget->axisRect()->axis(QCPAxis::atRight, 1)->setPadding(30); // add some padding to have space for tags
 
     // create graphs:
     mGraph9 = ui->roll_widget->addGraph(ui->roll_widget->xAxis, ui->roll_widget->axisRect()->axis(QCPAxis::atRight, 0));
-    //mGraph2 = mPlot->addGraph(mPlot->xAxis, mPlot->axisRect()->axis(QCPAxis::atRight, 1));
     mGraph9->setPen(QPen(QColor(0, 0, 255)));
-    //mGraph2->setPen(QPen(QColor(0, 180, 60)));
 
     // create tags with newly introduced AxisTag class (see axistag.h/.cpp):
     mTag9 = new AxisTag(mGraph9->valueAxis());
     mTag9->setPen(mGraph9->pen());
-    //mTag2 = new AxisTag(mGraph2->valueAxis());
-    //mTag2->setPen(mGraph2->pen());
 
-    connect(&mDataTimer9, SIGNAL(timeout()), this, SLOT(timerSlotRoll()));
-    mDataTimer9.start(40);
+    connect(&mDataTimer, SIGNAL(timeout()), this, SLOT(timerSlotRoll()));
 }
 
 

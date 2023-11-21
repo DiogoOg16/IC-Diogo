@@ -31,7 +31,7 @@ const unsigned char crcTable[256] = {
 void _Lifes_Protocol::Init_Lifes_SIM(Logger* logger_pointer)
 {
     logger = logger_pointer;
-    //lData = new load_data();
+
     //tamanhos estruturas
     lifes_sim.size[CMD_TYPE_SYNC_CLOCK]         = (int) sizeof(_Relogio);
     lifes_sim.size[CMD_TYPE_CRV_ACCEL]          = (int) sizeof(_CurvaAccel);
@@ -67,21 +67,15 @@ void _Lifes_Protocol::Init_Lifes_SIM(Logger* logger_pointer)
 
     lifes_sim.st = lifes_sim.ACTIVE;  //Stream constante de dados
 
-
-
 }
 
-/*void _Lifes_Protocol::defineLoad(load_data *load){
-    ld = &load;
-}*/
-/*
-load_data* _Lifes_Protocol::obtemLoad(){
+void _Lifes_Protocol::defineLoad(load_data *load){
+    lData = load; 
+}
+
+load_data* _Lifes_Protocol::obtemLData(){
     return lData;
 }
-*/
-//bool _Lifes_Protocol::checaLData(){
-    
-//}
 
 void _Lifes_Protocol::Atualiza_inicial()
 {
@@ -144,110 +138,34 @@ unsigned char _Lifes_Protocol::lifes_SIM_comando(_command_types comando)
     return 1;
 }
 
-bool _Lifes_Protocol::semaforo()
-{
-    if(accx == true && accy == true && accz == true &&
-        gyrx == true && gyry == true && gyrz == true &&
-        azi == true && pitch == true && roll == true ){
-        
-        return true;
-    }
-    else return false;
-}
-
-void _Lifes_Protocol::reset()
-{
-    accx = false;
-    accy = false;
-    accz = false;
-    gyrx = false;
-    gyry = false;
-    gyrz = false;
-    azi = false;
-    pitch = false;
-    roll = false;
-}
-
-void _Lifes_Protocol::atualiza_acc_x(double ponto)
-{
-    lifes_sim.dados.curvas.acelerometer.curvas[0] = (float)ponto;
-    accx = true;
-}
-
-void _Lifes_Protocol::atualiza_acc_y(double ponto)
-{
-    lifes_sim.dados.curvas.acelerometer.curvas[1] = (float)ponto;
-    accy = true;
-}
-
-void _Lifes_Protocol::atualiza_acc_z(double ponto)
-{
-    lifes_sim.dados.curvas.acelerometer.curvas[2] = (float)ponto;
-    accz = true;
-}
-
-void _Lifes_Protocol::atualiza_gyr_x(double ponto)
-{
-    lifes_sim.dados.curvas.gyroscope.curvas[0] = (float)ponto;
-    gyrx = true;
-}
-
-void _Lifes_Protocol::atualiza_gyr_y(double ponto)
-{
-    lifes_sim.dados.curvas.gyroscope.curvas[1] = (float)ponto;
-    gyry = true;
-}
-
-void _Lifes_Protocol::atualiza_gyr_z(double ponto)
-{
-    lifes_sim.dados.curvas.gyroscope.curvas[2] = (float)ponto;
-    gyrz = true;
-}
-
-void _Lifes_Protocol::atualiza_azi(double ponto){
-    lifes_sim.dados.curvas.magnetometer.curvas[0] = (float)ponto;
-    azi = true;
-}
-
-void _Lifes_Protocol::atualiza_pitch(double ponto){
-    lifes_sim.dados.curvas.magnetometer.curvas[1] = (float)ponto;
-    pitch = true;
-}
-
-void _Lifes_Protocol::atualiza_roll(double ponto){
-    lifes_sim.dados.curvas.magnetometer.curvas[2] = (float)ponto;
-    roll = true;
-}
-
 /*	Tras os dados do fluxo principal para o fluxo de envio*/
 void _Lifes_Protocol::Atualiza_Estrutura(_command_types comando)
 {
-    double ponto;
     switch (comando)
     {
         case CMD_TYPE_SYNC_CLOCK:
             lifes_sim.dados.relogio.Segundo = 10;
             lifes_sim.dados.relogio.Minuto = 20;
             lifes_sim.dados.relogio.Hora = 8;
-            lifes_sim.dados.curvas.acelerometer.curvas[0] = 550;
+            lifes_sim.dados.curvas.acelerometer.curvas[0]=550;
             lifes_sim.dados.relogio.Dia = 20;
             lifes_sim.dados.relogio.Mes = 02;
             lifes_sim.dados.relogio.Ano = 22;
             break;
         case CMD_TYPE_CRV_ACCEL:
-            //std::cout << lData << std::endl;
-           // lifes_sim.dados.curvas.acelerometer.curvas[0] = (*ld)->testedefuncao();
-            //lifes_sim.dados.curvas.acelerometer.curvas[1] = 1.0;
-            //lifes_sim.dados.curvas.acelerometer.curvas[2] = 1.0;
-            //static_cast<float>(lData->elem1Acc_x())
+            if(lData != NULL)lifes_sim.dados.curvas.acelerometer.curvas[0] = lData->elem1Acc_x(); //-1.5555555
+            else lifes_sim.dados.curvas.acelerometer.curvas[0] = 0.0;
+            lifes_sim.dados.curvas.acelerometer.curvas[1] = 2.0;
+            lifes_sim.dados.curvas.acelerometer.curvas[2] = 3.0;
+            //static_cast<float>(lData->elem1Acc_x()) -1.40731141481685
             break;
 
         case CMD_TYPE_CRV_MAG:
-            //memset(lifes_sim.dados.curvas.magnetometer.curvas, 0x38, sizeof(lifes_sim.dados.curvas.magnetometer.curvas));
+            memset(lifes_sim.dados.curvas.magnetometer.curvas, 0x38, sizeof(lifes_sim.dados.curvas.magnetometer.curvas));
             break;
 
         case CMD_TYPE_CRV_GYR:
-            //memset(lifes_sim.dados.curvas.gyroscope.curvas, 0x39, sizeof(lifes_sim.dados.curvas.gyroscope.curvas));
+            memset(lifes_sim.dados.curvas.gyroscope.curvas, 0x39, sizeof(lifes_sim.dados.curvas.gyroscope.curvas));
             break;
 
         case CMD_TYPE_CFG_PUB:

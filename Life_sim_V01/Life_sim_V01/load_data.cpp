@@ -1,9 +1,9 @@
 #include "load_data.h"
 
-load_data::load_data(QString filename)
+load_data::load_data(Logger *logger, QString filename)
     //: QObject{parent}
 {
-    
+    this->logger = logger;
     fileDyr = filename;
 }
 load_data::~load_data(){}
@@ -155,18 +155,6 @@ double load_data::elem1Roll(){
     return roll[0];
 }
 
-void load_data::pop_all(){
-    acc_x.pop_front();
-    acc_y.pop_front();
-    acc_z.pop_front();
-    gyr_x.pop_front();
-    gyr_y.pop_front();
-    gyr_z.pop_front();
-    azi.pop_front();
-    pitch.pop_front();
-    roll.pop_front();
-    
-}
 void load_data::acc_x_Pop(){
     acc_x.pop_front();
 }
@@ -193,9 +181,4 @@ void load_data::pitch_Pop(){
 }
 void load_data::roll_Pop(){
    roll.pop_front();
-}
-
-double load_data::testedefuncao()
-{
-    return 1.0;
 }
