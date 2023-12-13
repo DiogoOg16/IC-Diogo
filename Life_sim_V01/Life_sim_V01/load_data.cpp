@@ -1,9 +1,9 @@
 #include "load_data.h"
 
-load_data::load_data(Logger *logger, QString filename)
+load_data::load_data(QString filename)
     //: QObject{parent}
 {
-    this->logger = logger;
+    
     fileDyr = filename;
 }
 load_data::~load_data(){}
@@ -51,6 +51,8 @@ void load_data::data_parser(){
         definePitch(valor7);
         double valor8 = elements[10].toDouble();
         defineRoll(valor8);
+        QString valor9 = elements[11];
+        defineLabel(valor9);
     }
       file.close();
 }
@@ -91,6 +93,12 @@ void load_data::definePitch(double p){
 }
 void load_data::defineRoll(double r){
         roll.push_back(r);
+}
+void load_data::defineLabel(QString l){
+        label.push_back(l);
+}
+void load_data::defineLocal(QString lc){
+        local.push_back(lc);
 }
 
 QString load_data::obtemFile(){
@@ -154,7 +162,27 @@ double load_data::elem1Pitch(){
 double load_data::elem1Roll(){
     return roll[0];
 }
+QString load_data::elem1Label(){
+    return label[0];
+}
+QString load_data::elem1Local(){
+    return local[0];
+}
 
+void load_data::pop_all(){
+    acc_x.pop_front();
+    acc_y.pop_front();
+    acc_z.pop_front();
+    gyr_x.pop_front();
+    gyr_y.pop_front();
+    gyr_z.pop_front();
+    azi.pop_front();
+    pitch.pop_front();
+    roll.pop_front();
+    label.pop_front();
+    //local.pop_front();
+    
+}
 void load_data::acc_x_Pop(){
     acc_x.pop_front();
 }
@@ -181,4 +209,9 @@ void load_data::pitch_Pop(){
 }
 void load_data::roll_Pop(){
    roll.pop_front();
+}
+
+double load_data::testedefuncao()
+{
+    return 1.0;
 }

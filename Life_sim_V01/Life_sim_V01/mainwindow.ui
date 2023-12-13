@@ -129,7 +129,7 @@
     <property name="geometry">
      <rect>
       <x>1670</x>
-      <y>50</y>
+      <y>40</y>
       <width>211</width>
       <height>108</height>
      </rect>
@@ -186,12 +186,12 @@
      <rect>
       <x>1390</x>
       <y>40</y>
-      <width>141</width>
+      <width>261</width>
       <height>91</height>
      </rect>
     </property>
     <property name="title">
-     <string>Dados</string>
+     <string>Localizacao</string>
     </property>
     <widget class="QLabel" name="labelPNG">
      <property name="geometry">
@@ -200,6 +200,19 @@
        <y>30</y>
        <width>101</width>
        <height>71</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lDado">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>241</width>
+       <height>51</height>
       </rect>
      </property>
      <property name="text">
