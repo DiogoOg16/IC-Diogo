@@ -17,6 +17,9 @@ typedef enum {
     CMD_TYPE_CRV_MAG,
     CMD_TYPE_CRV_GYR,
 
+    CMD_LABEL,
+    CMD_ROOM,
+
     CMD_TYPE_PARAM_ACCEL,
     CMD_TYPE_PARAM_GYR,
     CMD_TYPE_PARAM_MAG,
@@ -25,6 +28,8 @@ typedef enum {
     CMD_TYPE_CFG_GYR,
     CMD_TYPE_CFG_MAG,
     CMD_TYPE_CFG_PUB,
+
+   // CMD_LOCAL,
 
     CMD_TYPE_END
 
@@ -56,9 +61,25 @@ typedef struct
 typedef struct
 {
     //unsigned short cnt;
-    unsigned int timestamp;
+     unsigned int timestamp;
     float curvas[CURVAS_DEFAULT_SIZE];
 } _CurvaGyro;
+
+//label
+
+typedef struct 
+{
+    uint32_t  timestamp;
+    uint8_t  tipos;
+}_label;
+
+typedef struct 
+{
+    unsigned int timestamp;
+    unsigned short gps;
+}_local;
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //parametros
@@ -129,6 +150,8 @@ typedef struct
     _CurvaAccel acelerometer;
     _CurvaGyro  gyroscope;
     _CurvaMag   magnetometer;
+    _label      actions;
+    _local      room;
 } _curvas;
 
 //_parametros

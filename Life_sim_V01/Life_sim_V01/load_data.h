@@ -13,7 +13,7 @@ class load_data : public QObject
 {
     Q_OBJECT
 public:
-        load_data(QString file = "");
+        load_data(Logger *logger = nullptr, QString file = "");
         ~load_data();
         
 
@@ -27,7 +27,6 @@ public:
     QVector<double> obtemAzi();
     QVector<double> obtemPitch();
     QVector<double> obtemRoll();
-    QVector<QString> obtemLabel();
     QString obtemFile();
 
     double elem1Acc_x();
@@ -39,11 +38,7 @@ public:
     double elem1Azi();
     double elem1Pitch();
     double elem1Roll();
-    double testedefuncao();
-    QString elem1Label();
-    QString elem1Local();
 
-    void pop_all();
     void acc_x_Pop();
     void acc_y_Pop();
     void acc_z_Pop();
@@ -65,8 +60,6 @@ public:
     void definePitch(double p);
     void defineRoll(double r);
     void defineFileDyr(QString f);
-    void defineLabel(QString l);
-    void defineLocal(QString lc);
 
     void data_parser();
     void printParser();
@@ -85,8 +78,6 @@ private:
     QVector<double> azi;
     QVector<double> pitch;
     QVector<double> roll;
-    QVector<QString> label;
-    QVector<QString> local;
     
 signals:
 

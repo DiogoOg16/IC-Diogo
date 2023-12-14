@@ -31,6 +31,8 @@ bool azi = false;
 bool pitch = false;
 bool roll = false;
 
+bool label = false;
+bool gps = false;
 private:
 Logger* logger;
 //load_data *lData;
@@ -53,6 +55,9 @@ void atualiza_gyr_z(double ponto);
 void atualiza_azi(double ponto, unsigned int t);
 void atualiza_pitch(double ponto);
 void atualiza_roll(double ponto);
+
+void atualiza_label(QString label, unsigned int t);
+void atualiza_gps(QString g, unsigned int t);
 
 bool semaforo();
 void reset();

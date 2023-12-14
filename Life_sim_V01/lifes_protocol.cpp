@@ -44,6 +44,9 @@ void _Lifes_Protocol::Init_Lifes_SIM(Logger* logger_pointer)
     lifes_sim.size[CMD_TYPE_CFG_GYR]            = (int) sizeof(_ConfigGyro);
     lifes_sim.size[CMD_TYPE_CFG_MAG]            = (int) sizeof(_ConfigMag);
     lifes_sim.size[CMD_TYPE_CFG_PUB]            = (int) sizeof(_ConfigPub);
+    lifes_sim.size[CMD_LABEL]                   = (int) sizeof(_label);
+    lifes_sim.size[CMD_ROOM]                    = (int) sizeof(_local);
+
 
     //ponteiros para estruturas
     lifes_sim.address[CMD_TYPE_SYNC_CLOCK]      = &lifes_sim.dados.relogio;
@@ -57,6 +60,8 @@ void _Lifes_Protocol::Init_Lifes_SIM(Logger* logger_pointer)
     lifes_sim.address[CMD_TYPE_CFG_GYR]         = &lifes_sim.dados.config.gyroscope;
     lifes_sim.address[CMD_TYPE_CFG_MAG]         = &lifes_sim.dados.config.magnetometer;
     lifes_sim.address[CMD_TYPE_CFG_PUB]         = &lifes_sim.dados.config.publisher;
+    lifes_sim.address[CMD_LABEL]                = &lifes_sim.dados.curvas.actions;
+    lifes_sim.address[CMD_ROOM]                 = &lifes_sim.dados.curvas.room;
 
     lifes_sim_tools.init_FIFO_out();
 
@@ -85,6 +90,9 @@ void _Lifes_Protocol::Atualiza_inicial()
     Atualiza_Estrutura(CMD_TYPE_CFG_GYR);
     Atualiza_Estrutura(CMD_TYPE_CFG_MAG);
     Atualiza_Estrutura(CMD_TYPE_CFG_PUB);
+    Atualiza_Estrutura(CMD_LABEL);
+    Atualiza_Estrutura(CMD_ROOM);
+
 
     lifes_sim_ant = lifes_sim; //iguala estruturas
 }
@@ -139,7 +147,9 @@ bool _Lifes_Protocol::semaforo()
 {
     if(accx == true && accy == true && accz == true &&
         gyrx == true && gyry == true && gyrz == true &&
-        azi == true && pitch == true && roll == true ){
+        azi == true && pitch == true && roll == true && 
+        label == true)
+    {
         
         return true;
     }
@@ -157,6 +167,8 @@ void _Lifes_Protocol::reset()
     azi = false;
     pitch = false;
     roll = false;
+    label = false;
+    gps = false;
 }
 
 void _Lifes_Protocol::atualiza_acc_x(double ponto, unsigned int t)
@@ -211,6 +223,46 @@ void _Lifes_Protocol::atualiza_pitch(double ponto){
 void _Lifes_Protocol::atualiza_roll(double ponto){
     lifes_sim.dados.curvas.magnetometer.curvas[2] = (float)ponto;
     roll = true;
+}
+
+
+void _Lifes_Protocol::atualiza_label(QString l, unsigned int t){
+    if(l == "BSC")        lifes_sim.dados.curvas.actions.tipos = 0x00;
+    else if (l == "CHU")  lifes_sim.dados.curvas.actions.tipos = 0x01;
+    else if (l == "CSI")  lifes_sim.dados.curvas.actions.tipos = 0x02;
+    else if (l == "CSO")  lifes_sim.dados.curvas.actions.tipos = 0x03;
+    else if (l == "FKL")  lifes_sim.dados.curvas.actions.tipos = 0x04;
+    else if (l == "FOL")  lifes_sim.dados.curvas.actions.tipos = 0x05;
+    else if (l == "JOG")  lifes_sim.dados.curvas.actions.tipos = 0x06;
+    else if (l == "JUM")  lifes_sim.dados.curvas.actions.tipos = 0x07;
+    else if (l == "SBE")  lifes_sim.dados.curvas.actions.tipos = 0x08;
+    else if (l == "SBW")  lifes_sim.dados.curvas.actions.tipos = 0x09;
+    else if (l == "SCH")  lifes_sim.dados.curvas.actions.tipos = 0x0A;
+    else if (l == "SDL")  lifes_sim.dados.curvas.actions.tipos = 0x0B;
+    else if (l == "SIT")  lifes_sim.dados.curvas.actions.tipos = 0x0C;
+    else if (l == "SLH")  lifes_sim.dados.curvas.actions.tipos = 0x0D;
+    else if (l == "SLW")  lifes_sim.dados.curvas.actions.tipos = 0x0E;
+    else if (l == "SRH")  lifes_sim.dados.curvas.actions.tipos = 0x0F;
+    else if (l == "STD")  lifes_sim.dados.curvas.actions.tipos = 0x10;
+    else if (l == "STN")  lifes_sim.dados.curvas.actions.tipos = 0x11;
+    else if (l == "STU")  lifes_sim.dados.curvas.actions.tipos = 0x12;
+    else if (l == "WAL")  lifes_sim.dados.curvas.actions.tipos = 0x13;
+    else if (l == "LYI")  lifes_sim.dados.curvas.actions.tipos = 0x14;
+    else  lifes_sim.dados.curvas.actions.tipos = 0xFF;
+    lifes_sim.dados.curvas.actions.timestamp = t;
+    label = true;
+}
+
+void _Lifes_Protocol::atualiza_gps(QString g, unsigned int t){
+    if(g == "ROM")          lifes_sim.dados.curvas.room.gps = 0x00;
+    else if (g == "LRM")    lifes_sim.dados.curvas.room.gps = 0x01;
+    else if (g == "KTC")    lifes_sim.dados.curvas.room.gps = 0x02;
+    else if (g == "BTH")    lifes_sim.dados.curvas.room.gps = 0x03;
+    else if (g == "GRG")    lifes_sim.dados.curvas.room.gps = 0x04;
+    else                        lifes_sim.dados.curvas.room.gps = 0xFF;
+
+    lifes_sim.dados.curvas.room.timestamp = t;
+    gps = true;
 }
 
 /*	Tras os dados do fluxo principal para o fluxo de envio*/

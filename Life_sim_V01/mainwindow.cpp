@@ -98,38 +98,58 @@ void MainWindow::on_directoryBox_currentIndexChanged(int index)
 
     this->ui->patientBox->clear();
     this->ui->patientBox->addItems(files);
-
-
-    //Identificar a atividade para mostrar na label
-
-    if(selectedFolderName == "BSC") ui->labelAtividadeDado->setText("Back sitting chair");
-    else if (selectedFolderName == "CHU") ui->labelAtividadeDado->setText("Chair Up");
-    else if (selectedFolderName == "CSI") ui->labelAtividadeDado->setText("Car Stepping-In");
-    else if (selectedFolderName == "CSO") ui->labelAtividadeDado->setText("Chair Stepping-Out");
-    else if (selectedFolderName == "FKL") ui->labelAtividadeDado->setText("Fall Front Knees Lying");
-    else if (selectedFolderName == "FOL") ui->labelAtividadeDado->setText("Fall Forward Lying");
-    else if (selectedFolderName == "JOG") ui->labelAtividadeDado->setText("Jogging");
-    else if (selectedFolderName == "JUM") ui->labelAtividadeDado->setText("Jumping");
-    else if (selectedFolderName == "SBE") ui->labelAtividadeDado->setText("Exercising");
-    else if (selectedFolderName == "SBW") ui->labelAtividadeDado->setText("Working");
-    else if (selectedFolderName == "SCH") ui->labelAtividadeDado->setText("Sit Chair");
-    else if (selectedFolderName == "SDL") ui->labelAtividadeDado->setText("Side Ward Lying");
-    else if (selectedFolderName == "SIT") ui->labelAtividadeDado->setText("Sitting On Chair");
-    else if (selectedFolderName == "SLH") ui->labelAtividadeDado->setText("Leaving Home");
-    else if (selectedFolderName == "SLW") ui->labelAtividadeDado->setText("Leaving Work");
-    else if (selectedFolderName == "SRH") ui->labelAtividadeDado->setText("Return Home");
-    else if (selectedFolderName == "STD") ui->labelAtividadeDado->setText("Standing");
-    else if (selectedFolderName == "STN") ui->labelAtividadeDado->setText("Stairs Down");
-    else if (selectedFolderName == "STU") ui->labelAtividadeDado->setText("Stairs Up");
-    else if (selectedFolderName == "WAL") ui->labelAtividadeDado->setText("Walking");
-    else ui->labelAtividadeDado->setText("Atividade não reconhecida");
-
-
-
 }
 
 
+void MainWindow::setLabel(QString label)
+{
+     //Identificar a atividade para mostrar na label
+setLocation();
+    if(label == "BSC") ui->labelAtividadeDado->setText("Back sitting chair");
+    else if (label == "CHU") ui->labelAtividadeDado->setText("Chair Up");
+    else if (label == "CSI") ui->labelAtividadeDado->setText("Car Stepping-In");
+    else if (label == "CSO") ui->labelAtividadeDado->setText("Chair Stepping-Out");
+    else if (label == "FKL") ui->labelAtividadeDado->setText("Fall Front Knees Lying");
+    else if (label == "FOL") ui->labelAtividadeDado->setText("Fall Forward Lying");
+    else if (label == "JOG") ui->labelAtividadeDado->setText("Jogging");
+    else if (label == "JUM") ui->labelAtividadeDado->setText("Jumping");
+    else if (label == "SBE") ui->labelAtividadeDado->setText("Exercising");
+    else if (label == "SBW") ui->labelAtividadeDado->setText("Working");
+    else if (label == "SCH") ui->labelAtividadeDado->setText("Sit Chair");
+    else if (label == "SDL") ui->labelAtividadeDado->setText("Side Ward Lying");
+    else if (label == "SIT") ui->labelAtividadeDado->setText("Sitting On Chair");
+    else if (label == "SLH") ui->labelAtividadeDado->setText("Leaving Home");
+    else if (label == "SLW") ui->labelAtividadeDado->setText("Leaving Work");
+    else if (label == "SRH") ui->labelAtividadeDado->setText("Return Home");
+    else if (label == "STD") ui->labelAtividadeDado->setText("Standing");
+    else if (label == "STN") ui->labelAtividadeDado->setText("Stairs Down");
+    else if (label == "STU") ui->labelAtividadeDado->setText("Stairs Up");
+    else if (label == "WAL") ui->labelAtividadeDado->setText("Walking");
+    else if (label == "LYI") ui->labelAtividadeDado->setText("Laying");
+    else ui->labelAtividadeDado->setText("Atividade não reconhecida");
 
+}
+QString joj;
+void MainWindow::setLocation()
+{
+     //Identificar a atividade para mostrar na label
+    QString local1 = "ROM";
+    QString local2 = "LRM";
+    QString local3 = "KTC";
+    QString local4 = "BTH";
+    QString local5 = "GRG";
+    QString local = "";
+
+    local = local1;
+    joj = local1;
+    if(local == "ROM") ui->lDado->setText("Room");
+    else if (local == "LRM") ui->lDado->setText("Living Room");
+    else if (local == "KTC") ui->lDado->setText("Kitchen");
+    else if (local == "BTH") ui->lDado->setText("Bathroom");
+    else if (local == "GRG") ui->lDado->setText("Garage");
+    else ui->lDado->setText("Local não reconhecido");
+
+}
 
 QString temp;
 void MainWindow::on_patientBox_currentIndexChanged(int index)
@@ -178,7 +198,7 @@ bool pGrafico =0;
 bool pEnvio = 0;
 
 
-int tempoTimer = 1;
+int tempoTimer = 5000;
 
 void MainWindow::on_stopbutton_clicked()
 {
@@ -221,6 +241,9 @@ void MainWindow::SendInFreq()
         Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_ACCEL);
         Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_MAG);
         Lifes_Protocol.lifes_SIM_comando(CMD_TYPE_CRV_GYR);
+        Lifes_Protocol.lifes_SIM_comando(CMD_LABEL);
+        Lifes_Protocol.lifes_SIM_comando(CMD_ROOM);
+
         timestamp++;
         //logger->write("Sent Accel Curve!");
         //contador += 9;
@@ -276,7 +299,7 @@ void MainWindow::timerSlot()
 
     double ponto = load->elem1Acc_x();
     Lifes_Protocol.atualiza_acc_x(ponto,timestamp);
-
+    setLabel(load->elem1Label());
     // calculate and add a new data point to each graph:
     mGraph1->addData(mGraph1->dataCount(), ponto);
 
@@ -459,8 +482,14 @@ void MainWindow::timerSlotRoll(){
 
     ui->roll_widget->replot();
 
+    QString acao = load->elem1Label();
+    Lifes_Protocol.atualiza_label(acao, timestamp);
 
-     ativaTimer();
+    QString gps = joj;
+        //load->elem1Local();
+    Lifes_Protocol.atualiza_gps(gps, timestamp);
+
+    ativaTimer();
 
 }
 

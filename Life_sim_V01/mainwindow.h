@@ -72,6 +72,8 @@ private slots:
     void desativaTimer();
     void obtemAmostras();
 
+    void setLabel(QString label);
+    void setLocation();
 
 private:
     Ui::MainWindow *ui;
